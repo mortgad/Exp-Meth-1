@@ -1,0 +1,169 @@
+---
+title: "Chapter 5"
+author: "Morten Gade"
+date: "23/9/2019"
+output: html_document
+---
+
+Before getting started we need to install and load some packages. 
+REMEMBER when loading R Commander XQuarts needs to be open. 
+
+```{r}
+library(Rcmdr)
+library(car)
+library(ggplot2)
+library(pastecs)
+library(psych)
+library(tidyverse)
+```
+
+Now we need to import some data. In this case the data we need to analyze is regarding the hygiene of festival attendees. The data is imported from a .txt file, and is imported through Rcmdr. By using Rcmdr the following code is generated: 
+
+```{r}
+Dataset <- read.table("/Users/mortengade/Exp-Meth-1/DownloadFestival.txt", header = TRUE, 
+    sep = "\t", na.strings = "NA", dec = ".", strip.white = TRUE)
+dataset <- Dataset
+```
+
+Editing the file and remowing outliers. 
+Editing in Rcmdr. 
+
+```{r}
+dataset <- Dataset
+```
+
+
+Now we need to plot the data.
+
+```{r}
+day1 <- ggplot(dataset, aes(x=day1)) + theme(legend.position = "none") + geom_density(color="black",fill="white") + labs(x = "Hygiene score on day 1", y = "Density")
+
+day1
+```
+
+We wanna add a normal distribution curve to our current histogram:
+
+```{r}
+day1_dnorm <- day1 + stat_function(fun = dnorm, args = list(mean = mean(dataset$day1,na.rm = TRUE), sd = sd(dataset$day1, na.rm = TRUE)), color = "black", size = 1)
+
+day1_dnorm
+```
+
+A Q-Q plot can also be used to illustrate deviation from the normal distribution. 
+
+A straight diagonal line indicates a normal distribution. 
+
+```{r}
+qqplot_day1 = qplot(sample = dataset$day1, stat = "qq")
+qqplot_day1
+```
+
+```{r}
+qqplot_day2 <- qplot(sample = dataset$day2, stat = "qq")
+qqplot_day2
+```
+
+```{r}
+qqplot_day3 <- qplot(sample = dataset$day3, stat = "qq")
+qqplot_day3
+```
+
+The describe function from the psych-package:
+
+```{r}
+describe(dataset$day1)
+```
+
+```{r}
+stat.desc(dataset$day1, basic = FALSE, norm = TRUE)
+```
+
+basic = TRUE results in a bunch of basic statistics.
+norm  = FALSE denies statistics relating to the normal distribution. 
+
+By using the cbind-function we can use describe() and stat.desc() on more than one variable. 
+
+```{r}
+stat.desc(cbind(dataset$day1, dataset$day2, dataset$day3), basic = FALSE, norm = TRUE)
+```
+
+```{r}
+describe(cbind(dataset$day1, dataset$day2, dataset$day3))
+```
+
+## GROUPING DATA
+
+```{r}
+rexam <- read.delim("rexam.dat", header = TRUE)
+```
+
+Reclassifying the variable "uni" from number to factor:
+
+```{r}
+rexam$uni <- factor(rexam$uni, levels = c(0:1), labels = c("Duncetown University", "Sussex University"))
+
+rexam
+```
+
+Using statistical tools on the dataset:
+
+```{r}
+exam_by_lectures <-  ggplot(rexam, aes(x = rexam$lectures, y = rexam$exam)) + geom_density(stat = "summary", fun.y = mean) 
+
+exam_by_lectures
+```
+
+```{r}
+exam_distribution <- ggplot(rexam, aes(x = rexam$exam)) + geom_density(color="black",fill="white") + labs(x = "Exam Scores", y = "Density") + theme(legend.position = "none")
+
+exam_distribution
+```
+
+```{r}
+exam_histogram <- ggplot(rexam, aes(x = rexam$exam)) + geom_histogram(color="black", fill="white", binwidth = 2) + labs(x = "Exam Scores", y = "Frequency") + theme(legend.position = "none")
+
+exam_histogram
+```
+
+```{r}
+exam_density_hist <- ggplot(rexam, aes(x = rexam$exam)) + theme(legend.position = "none") + geom_histogram(aes(y = ..density..), color = "black", fill = "white", bins = 30) + labs(x = "Exam Scores", y = "Density")
+
+exam_density_hist
+```
+
+
+```{r}
+comp_literacy_histogram <- ggplot(rexam, aes(x = rexam$computer)) + geom_histogram(color="black", fill="white", binwidth = 1.5) + labs(x = "Computer Literacy", y = "Frequency") + theme(legend.position = "none")
+
+comp_literacy_histogram
+```
+
+```{r}
+stat.desc(cbind(rexam$exam, rexam$computer, rexam$lectures, rexam$numeracy), basic = FALSE, norm = TRUE)
+```
+
+### by() function
+
+by(data = dataFrame, INDICES = grouping variable, FUN = a function that you want to apply to the data)
+
+```{r}
+by(data = rexam$exam, INDICES = rexam$uni, FUN = describe)
+```
+
+```{r}
+by(data = rexam$exam, INDICES = rexam$uni, FUN = stat.desc)
+```
+
+```{r}
+by(rexam$exam, rexam$uni, stat.desc, basic = FALSE, norm = TRUE)
+```
+
+```{r}
+by(cbind(rexam$exam, rexam$numeracy), rexam$uni, stat.desc, basic = FALSE, norm = TRUE)
+```
+
+```{r}
+by(cbind(rexam$exam, rexam$numeracy), rexam$uni, describe)
+```
+
+
